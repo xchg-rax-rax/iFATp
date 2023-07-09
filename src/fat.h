@@ -16,8 +16,8 @@ typedef struct BPB {
     uint16_t num_sectors_per_fat; // FAT12/16 only
     uint16_t num_sectors_per_track;
     uint16_t num_heads;
-    uint16_t num_hidden_sectors;
-    uint16_t large_sector_count; // Only set if num_sectors_per_cluster == 0
+    uint32_t num_hidden_sectors;
+    uint32_t large_sector_count; // Only set if num_sectors_per_cluster == 0
  } __attribute__((packed)) BPB;
 
 // FAT12 / FAT16 Extended Boot Record
