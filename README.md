@@ -8,4 +8,16 @@ iFATp was created as a tool during the process of OS dev and as a consequence it
 
 # To Do
 
-WIP. This repo exists primarily to remind me to build this for now.
+- Add code to recognize FS types
+- Finish Header Parsing for:
+    - ~FAT12~ [DONE]
+    - FAT16 [Complete in practice, just need code to differentiate file system types]
+    - FAT32
+    - exFAT
+    - NTFS
+- Add computed statistics for file systems
+- Add File system parsing:
+    - List Files and directories 
+    - List Deleted Files
+    - Recover Deleted Files
+    - Get size and capacity information
