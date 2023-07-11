@@ -59,7 +59,7 @@ typedef struct EBR_FAT32 {
     uint16_t boot_partition_signature;
 } __attribute__((packed)) EBR_FAT32;
 
-// FAT12 Boot Record 
+// FAT Boot Record 
 
 typedef struct BS_FAT {
     BPB bpb;
@@ -69,6 +69,32 @@ typedef struct BS_FAT {
         EBR_FAT32 fat32;
     } ebr;
 } __attribute__((packed)) BS_FAT;
+
+// exFAT Boot Sector 
+
+typedef struct BS_exFAT {
+    uint8_t entry_point[3];
+    char file_system_name[8];
+    uint8_t zero_reserved_bytes[53];
+    uint64_t partition_offset;
+    uint64_t voulme_length;
+    uint32_t fat_offset; 
+    uint32_t fat_length; 
+    uint32_t cluster_heap_offset; 
+    uint32_t cluster_count; 
+    uint32_t first_cluster_of_root_directory; 
+    uint32_t volume_serial_number; 
+    uint16_t file_system_revision; 
+    uint16_t volume_flags; 
+    uint8_t bytes_per_sector_shift; 
+    uint8_t sectors_per_cluster_shift; 
+    uint8_t num_file_allocation_tables; 
+    uint8_t drive_select; 
+    uint8_t percentage_in_use; 
+    uint8_t reserved_bytes[7]; 
+    uint8_t boot_code[390];
+    uint16_t boot_partition_signature;
+} __attribute__((packed)) BS_exFAT;
 
 /*
  *  Helper Functions

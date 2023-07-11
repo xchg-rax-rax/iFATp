@@ -24,7 +24,7 @@ ${BUILD_DIR}/iFATp: ./src/main.c util fat
 clean:
 	rm -rf ${BUILD_DIR}/*
 
-test_all: test_fat12 test_fat16 test_fat32
+test_all: test_fat12 test_fat16 test_fat32 test_exfat
 
 test_fat12: iFATp
 	${BUILD_DIR}/iFATp ./test/test_data/fat12.img
@@ -32,3 +32,5 @@ test_fat16: iFATp
 	${BUILD_DIR}/iFATp ./test/test_data/fat16.img
 test_fat32: iFATp
 	${BUILD_DIR}/iFATp ./test/test_data/fat32.img
+test_exfat: iFATp
+	${BUILD_DIR}/iFATp ./test/test_data/exfat.img

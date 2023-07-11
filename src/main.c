@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
             break;
         case exFAT:
             printf("[*] exFAT file-system detected.\n");
+            print_exfat_metadata((BS_exFAT*)&boot_sector);
             break;
         case NTFS:
             printf("[*] NTFS file-system detected.\n");

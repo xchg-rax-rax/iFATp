@@ -25,11 +25,11 @@ uint64_t compute_count_of_sectors(BS_FAT* bs) {
     
 
 FSType determine_fs_type(BS_FAT* bs) {
-    uint64_t cluster_count = compute_count_of_sectors(bs);
     if(bs->bpb.num_bytes_per_sector == 0) {
         return exFAT;
     }
-    else if (cluster_count < 4086) {
+    uint64_t cluster_count = compute_count_of_sectors(bs);
+    if (cluster_count < 4086) {
         return FAT12; 
     }
     else if (cluster_count < 65525) {

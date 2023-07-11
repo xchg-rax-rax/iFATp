@@ -63,7 +63,7 @@ void print_extended_boot_record_fat12(EBR_FAT12* ebr) {
     printf("System Identifier String: %s\n", system_identifier_string);
     printf("%s","Boot Code:\n");
     print_hex_dump(ebr->boot_code, sizeof(ebr->boot_code));
-    printf("%s","Boot Parturition Signature: ");
+    printf("%s","Boot Partition Signature: ");
     print_hex_dump((uint8_t*)&(ebr->boot_partition_signature), sizeof(ebr->boot_partition_signature));
 }
 
@@ -93,7 +93,7 @@ void print_extended_boot_record_fat32(EBR_FAT32* ebr) {
     printf("System Identifier String: %s\n", system_identifier_string);
     printf("%s","Boot Code:\n");
     print_hex_dump(ebr->boot_code, sizeof(ebr->boot_code));
-    printf("%s","Boot Parturition Signature: ");
+    printf("%s","Boot Partition Signature: ");
     print_hex_dump((uint8_t*)&(ebr->boot_partition_signature), sizeof(ebr->boot_partition_signature));
 }
 
@@ -104,7 +104,7 @@ void print_fat_12_metadata(BS_FAT* bs) {
     printf("%s","\nExtended Boot Record\n");
     printf("%s","--------------------\n\n");
     print_extended_boot_record_fat12(&(bs->ebr.fat12));
-};
+}
 
 void print_fat_16_metadata(BS_FAT* bs) {
     printf("%s","\nBIOS Parameter Block\n");
@@ -113,7 +113,7 @@ void print_fat_16_metadata(BS_FAT* bs) {
     printf("%s","\nExtended Boot Record\n");
     printf("%s","--------------------\n\n");
     print_extended_boot_record_fat16(&(bs->ebr.fat16));
-};
+}
 
 void print_fat_32_metadata(BS_FAT* bs) {
     printf("%s","\nBIOS Parameter Block\n");
@@ -122,5 +122,36 @@ void print_fat_32_metadata(BS_FAT* bs) {
     printf("%s","\nExtended Boot Record\n");
     printf("%s","--------------------\n\n");
     print_extended_boot_record_fat32(&(bs->ebr.fat32));
-};
+}
 
+void print_exfat_metadata(BS_exFAT* bs) {
+    printf("%s", "Entry Point: ");
+    print_hex_dump(bs->entry_point, sizeof(bs->entry_point));
+    char file_system_name[sizeof(bs->file_system_name)+1];
+    memcpy(file_system_name, bs->file_system_name, sizeof(bs->file_system_name));
+    file_system_name[sizeof(bs->file_system_name)] = '\0';
+    printf("File System Name: %s\n", file_system_name);
+    printf("%s","Zero Reserved Bytes:\n");
+    print_hex_dump(bs->zero_reserved_bytes, sizeof(bs->zero_reserved_bytes));
+    printf("Partition Offset: %lu\n", bs->partition_offset);
+    printf("Volume Length: %lu\n", bs->voulme_length);
+    printf("FAT Offset: %u\n", bs->fat_offset);
+    printf("FAT Length: %u\n", bs->fat_length);
+    printf("Cluster Heap Offset: %u\n", bs->cluster_heap_offset);
+    printf("Cluster Count: %u\n", bs->cluster_count);
+    printf("First Cluster of Root Directory: %u\n", bs->first_cluster_of_root_directory);
+    printf("Volume Serial Number: %08X\n", bs->volume_serial_number);
+    printf("File System Revision: %u\n", bs->file_system_revision);
+    printf("Volume Flags: %04X\n", bs->volume_flags);
+    printf("Bytes Per Sector Shift: %u\n", bs->bytes_per_sector_shift);
+    printf("Sectors Per Cluster Shift: %u\n", bs->sectors_per_cluster_shift);
+    printf("Number of File Allocation Tables: %u\n", bs->num_file_allocation_tables);
+    printf("Drive Select: %u\n", bs->num_file_allocation_tables);
+    printf("Percentage Used: %u\n", bs->percentage_in_use);
+    printf("%s","Reserved Bytes:\n");
+    print_hex_dump(bs->reserved_bytes, sizeof(bs->reserved_bytes));
+    printf("%s","Boot Code:\n");
+    print_hex_dump(bs->boot_code, sizeof(bs->boot_code));
+    printf("%s","Boot Partition Signature: ");
+    print_hex_dump((uint8_t*)&(bs->boot_partition_signature), sizeof(bs->boot_partition_signature));
+}
