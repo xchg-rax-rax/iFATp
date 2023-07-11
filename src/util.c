@@ -34,22 +34,21 @@ void print_bios_parameter_block(BPB* bpb) {
 
     printf("Bytes Per Sector: %u\n", bpb->num_bytes_per_sector);
 
-    uint16_t num_bytes_per_sector = bpb->num_bytes_per_sector != 0 ? 
-        bpb->num_bytes_per_sector : bpb->large_sector_count;
-    printf("Sectors Per Cluster: %u\n", num_bytes_per_sector);
+    printf("Sectors Per Cluster: %u\n", bpb->num_sectors_per_cluster);
 
-    printf("Number of Reserved Sectors: %u\n", bpb->num_root_directory_entires);
-    printf("Number of File Allocation Tables: %u\n", bpb->num_file_allocation_tables);
+    printf("Number of Reserved Sectors: %u\n", bpb->num_reserved_sectors);
+    printf("Number of File Allocation Table: %u\n", bpb->num_file_allocation_tables);
     printf("Number of Root Directory Entries: %u\n", bpb->num_root_directory_entires);
-    printf("Sectors Per Logical Volume: %u\n", bpb->num_sectors_in_logical_volume);
+    uint32_t num_sectors_in_logical_volume = get_num_sectors_in_logical_volume(bpb);
+    printf("Sectors Per Logical Volume: %u\n", num_sectors_in_logical_volume);
     printf("Media Description Type: %X\n", bpb->media_description_type);
-    printf("Sectors Per File Allocation Tables: %u\n", bpb->num_sectors_per_fat);
+    printf("Sectors Per File Allocation Tables (FAT12/16): %u\n", bpb->num_sectors_per_fat);
     printf("Sectors Per Track: %u\n", bpb->num_sectors_per_track);
     printf("Number of Heads: %u\n", bpb->num_heads);
     printf("Number of Hidden Sectors: %u\n", bpb->num_hidden_sectors);
 }
 
-void print_extended_boot_record(EBR_FAT12* ebr) {
+void print_extended_boot_record_fat12(EBR_FAT12* ebr) {
     printf("Drive Number: %u\n", ebr->drive_number);
     printf("NT Flags: %X\n", ebr->nt_flags);
     printf("Signature: %X\n", ebr->signature);
@@ -68,7 +67,60 @@ void print_extended_boot_record(EBR_FAT12* ebr) {
     print_hex_dump((uint8_t*)&(ebr->boot_partition_signature), sizeof(ebr->boot_partition_signature));
 }
 
-void print_fat_12_metadata(BS_FAT12* bs) {
+void print_extended_boot_record_fat16(EBR_FAT16* ebr) {
+    print_extended_boot_record_fat12((EBR_FAT12*) ebr);
+}
+
+void print_extended_boot_record_fat32(EBR_FAT32* ebr) {
+    printf("Sectors Per File Allocation Table (FAT32): %u\n", ebr->num_sectors_per_fat);
+    printf("NT Flags: %04X\n", ebr->flags);
+    printf("FAT Version Number: %04X\n", ebr->fat_version_number);
+    printf("Root Directory Cluster Number: %u\n", ebr->root_directory_cluster_number);
+    printf("FSInfo Sector Number: %u\n", ebr->fsinfo_sector_number);
+    printf("%s","Reserved Bytes:\n");
+    print_hex_dump(ebr->reserved, sizeof(ebr->reserved));
+    printf("Drive Number: %u\n", ebr->drive_number);
+    printf("NT Flags: %02X\n", ebr->nt_flags);
+    printf("Signature: %02X\n", ebr->signature);
+    printf("Volume ID: %08X\n", ebr->volume_id);
+    char volume_label[sizeof(ebr->volume_label)+1];
+    memcpy(volume_label, ebr->volume_label, sizeof(ebr->volume_label));
+    volume_label[sizeof(ebr->volume_label)] = '\0';
+    printf("Volume Label: %s\n", volume_label);
+    char system_identifier_string[sizeof(ebr->system_identifier_string)+1];
+    memcpy(system_identifier_string, ebr->system_identifier_string, sizeof(ebr->system_identifier_string));
+    system_identifier_string[sizeof(ebr->system_identifier_string)] = '\0';
+    printf("System Identifier String: %s\n", system_identifier_string);
+    printf("%s","Boot Code:\n");
+    print_hex_dump(ebr->boot_code, sizeof(ebr->boot_code));
+    printf("%s","Boot Parturition Signature: ");
+    print_hex_dump((uint8_t*)&(ebr->boot_partition_signature), sizeof(ebr->boot_partition_signature));
+}
+
+void print_fat_12_metadata(BS_FAT* bs) {
+    printf("%s","\nBIOS Parameter Block\n");
+    printf("%s","--------------------\n\n");
     print_bios_parameter_block(&(bs->bpb));
-    print_extended_boot_record(&(bs->ebr));
+    printf("%s","\nExtended Boot Record\n");
+    printf("%s","--------------------\n\n");
+    print_extended_boot_record_fat12(&(bs->ebr.fat12));
 };
+
+void print_fat_16_metadata(BS_FAT* bs) {
+    printf("%s","\nBIOS Parameter Block\n");
+    printf("%s","--------------------\n\n");
+    print_bios_parameter_block(&(bs->bpb));
+    printf("%s","\nExtended Boot Record\n");
+    printf("%s","--------------------\n\n");
+    print_extended_boot_record_fat16(&(bs->ebr.fat16));
+};
+
+void print_fat_32_metadata(BS_FAT* bs) {
+    printf("%s","\nBIOS Parameter Block\n");
+    printf("%s","--------------------\n\n");
+    print_bios_parameter_block(&(bs->bpb));
+    printf("%s","\nExtended Boot Record\n");
+    printf("%s","--------------------\n\n");
+    print_extended_boot_record_fat32(&(bs->ebr.fat32));
+};
+

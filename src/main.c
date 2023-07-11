@@ -17,45 +17,50 @@ int main(int argc, char** argv) {
     int fd = open(argv[1], O_RDONLY);
     if (fd == -1) {
         // Add better error handling
-        printf("[!] Error opening file.");
+        puts("[!] Error opening file.");
         return EXIT_FAILURE;
     }
   
-    // To start with we will just work on parsing FAT12 (as this is the one which is 
-    // of immediate interest to me) but we will have to modify how we are reading the
-    // file system down the line, pulling out the BPB first and using it to determine
-    // the FAT type. 
-    //
-    // Here is pseudo code to do that
-    //
-    // if (cluster_count < 4086) {
-    //      // FAT12
-    // }
-    // else if (cluster_count < 65525) {
-    //      // FAT16
-    // }
-    // else {
-    //      // FAT32
-    // }
-    //
-    // For exFAT we should load the BPB as a FAT BPB and then check to see if the bytes 
-    // per sector is 0, if it is we're working with exFAT more than likely
-
-    BS_FAT12 boot_sector;
-
+    // Read in BIOS Parameter Block so we can identify the FSType
+    BS_FAT boot_sector;
     int bytes_read = 0;
-    if ((bytes_read = read(fd, &boot_sector, sizeof(BS_FAT12))) == -1) {
+    if ((bytes_read = read(fd, &boot_sector, sizeof(BS_FAT))) == -1) {
         // Add better error handling
-        printf("[!] Error reading file.");
+        puts("[!] Error reading file.");
         return EXIT_FAILURE;
     }
-    /*
-    if (bytes_read != 512) {
+    if (bytes_read != sizeof(BS_FAT)) {
         // Handle particular error correctly
-        printf("[!] Failed to read complete Boot Sector, is image corrupt/incomplete?.");
+        puts("[!] Failed to read complete BIOS Parameter Block, is image corrupt or truncated?.");
         return EXIT_FAILURE;
     }
-    */
-    print_fat_12_metadata(&boot_sector);
+    FSType fs_type = determine_fs_type(&boot_sector);
+
+    switch(fs_type) {
+        case FAT12:
+            printf("[*] FAT12 file-system detected.\n");
+            print_fat_12_metadata(&boot_sector);
+            break;
+        case FAT16:
+            printf("[*] FAT16 file-system detected.\n");
+            print_fat_16_metadata(&boot_sector);
+            break;
+        case FAT32:
+            printf("[*] FAT32 file-system detected.\n");
+            print_fat_32_metadata(&boot_sector);
+            break;
+        case exFAT:
+            printf("[*] exFAT file-system detected.\n");
+            break;
+        case NTFS:
+            printf("[*] NTFS file-system detected.\n");
+            break;
+        case UNKNOWN:
+        default:
+            printf("[!] Unknown file-system format, cannot parse.\n");
+            break;
+    }
+    //print_bios_parameter_block(&bios_parameter_block);
+    //print_fat_12_metadata(&boot_sector);
     return EXIT_SUCCESS; 
 }

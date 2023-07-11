@@ -1,6 +1,14 @@
 #pragma once
 #include <stdint.h>
 
+typedef enum FSType : int32_t {
+    FAT12 = 0,
+    FAT16 = 1,
+    FAT32 = 2,
+    exFAT = 3,
+    NTFS  = 4,
+    UNKNOWN = -1
+} FSType ;
 
 // BIOS Parameter Block
 typedef struct BPB {
@@ -22,7 +30,7 @@ typedef struct BPB {
 
 // FAT12 / FAT16 Extended Boot Record
 
-typedef struct EBR_FAT12 {
+typedef struct EBR_FAT12_16 {
     uint8_t drive_number;
     uint8_t nt_flags;
     uint8_t signature;
@@ -31,23 +39,40 @@ typedef struct EBR_FAT12 {
     char system_identifier_string[8];
     uint8_t boot_code[448];
     uint16_t boot_partition_signature;
-} __attribute__((packed)) EBR_FAT12;
+} __attribute__((packed)) EBR_FAT12, EBR_FAT16;
 
-
-typedef EBR_FAT12 EBR_FAT16;
+typedef struct EBR_FAT32 {
+    uint32_t num_sectors_per_fat;
+    uint16_t flags;
+    uint16_t fat_version_number;
+    uint32_t root_directory_cluster_number;
+    uint16_t fsinfo_sector_number;
+    uint16_t backup_boot_sector_sector_number;
+    uint8_t reserved[12]; // Should be zero after format
+    uint8_t drive_number;
+    uint8_t nt_flags;
+    uint8_t signature;
+    uint32_t volume_id;
+    char volume_label[11];
+    char system_identifier_string[8];
+    uint8_t boot_code[420];
+    uint16_t boot_partition_signature;
+} __attribute__((packed)) EBR_FAT32;
 
 // FAT12 Boot Record 
 
-typedef struct BS_FAT12 {
+typedef struct BS_FAT {
     BPB bpb;
-    EBR_FAT12 ebr;
-} __attribute__((packed)) BS_FAT12;
+    union EBR {
+        EBR_FAT12 fat12;
+        EBR_FAT16 fat16;
+        EBR_FAT32 fat32;
+    } ebr;
+} __attribute__((packed)) BS_FAT;
 
 /*
-// FAT16 Boot Record
+ *  Helper Functions
+ */
 
-struct BS_FAT16 {
-    BPB bpb;
-    EBR_FAT16 ebr;
-} __attribute__((packed)) BS_FAT16;
-*/
+FSType determine_fs_type(BS_FAT* bs);
+uint32_t get_num_sectors_in_logical_volume(BPB* bpb);
