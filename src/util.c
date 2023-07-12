@@ -155,3 +155,41 @@ void print_exfat_metadata(BS_exFAT* bs) {
     printf("%s","Boot Partition Signature: ");
     print_hex_dump((uint8_t*)&(bs->boot_partition_signature), sizeof(bs->boot_partition_signature));
 }
+
+void print_computed_values(BPBComputedValues_t* computed_values) {
+    printf("%s","\nBoot Sector Computed Values\n");
+    printf("%s","---------------------------\n\n");
+    printf("Total Sectors: %u\n", computed_values->total_sectors);
+    printf("Sectors per FAT: %u\n", computed_values->num_sectors_per_fat);
+    printf("Sectors in root directory: %u\n", computed_values->num_root_dir_sectors);
+    printf("First FAT sector index: %u\n", computed_values->first_fat_sector_index);
+    printf("First data sector index: %u\n", computed_values->first_data_sector_index);
+    printf("Number of Data Sectors: %u\n", computed_values->num_data_sectors);
+    printf("Number of Clusters: %u\n", computed_values->num_clusters);
+    printf("%s", "Filesystem Type: ");
+    print_fs_type(computed_values->fs_type);
+}
+
+void print_fs_type(FSType fs_type) {
+    switch(fs_type) {
+        case FAT12:
+            printf("%s","FAT12\n");
+            break;
+        case FAT16:
+            printf("%s","FAT16\n");
+            break;
+        case FAT32:
+            printf("%s","FAT32\n");
+            break;
+        case exFAT:
+            printf("%s","exFAT\n");
+            break;
+        case NTFS:
+            printf("%s","NTFS\n");
+            break;
+        case UNKNOWN:
+        default:
+            printf("%s","UNKNOWN\n");
+            break;
+    }
+}

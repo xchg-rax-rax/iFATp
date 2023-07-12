@@ -13,7 +13,7 @@ iFATp was created as a tool during the process of OS dev and as a consequence it
     - ~FAT12~ [DONE]
     - ~FAT16~ [DONE]
     - ~FAT32~ [DONE]
-    - exFAT 
+    - ~exFAT~ [DONE]
     - NTFS [Maybe...]
 - Add computed statistics for file systems
 - Add File system parsing:

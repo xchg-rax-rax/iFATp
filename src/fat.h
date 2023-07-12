@@ -28,6 +28,18 @@ typedef struct BPB {
     uint32_t large_sector_count; // Only set if num_sectors_per_cluster == 0
  } __attribute__((packed)) BPB;
 
+// Correct name to be BS_FAT
+typedef struct BPBComputedValues {
+    uint32_t total_sectors;
+    uint32_t num_sectors_per_fat;
+    uint32_t num_root_dir_sectors;
+    uint32_t first_fat_sector_index;
+    uint32_t first_data_sector_index;
+    uint32_t num_data_sectors;
+    uint32_t num_clusters;
+    FSType   fs_type;
+} BPBComputedValues_t;
+
 // FAT12 / FAT16 Extended Boot Record
 
 typedef struct EBR_FAT12_16 {
@@ -97,8 +109,51 @@ typedef struct BS_exFAT {
 } __attribute__((packed)) BS_exFAT;
 
 /*
+ *  Directory Structs
+ */
+//perhaps these should just be consts?
+typedef enum DIR_ATTR {
+    READ_ONLY=0x01,
+    HIDDEN=0x02,
+    SYSTEM=0x04,
+    VOLUME_ID=0x08,
+    DIRECTORY=0x10,
+    ARCHIVE=0x20
+} DIR_ATTR_t;
+
+typedef struct DIR_FAT_8_3 {
+    char file_name[8];
+    uint8_t attributes;
+    uint8_t nt_reserved;
+    uint8_t creation_time_tenths_sec;
+    uint16_t creation_time;
+    uint16_t creation_date;
+    uint16_t last_access_date;
+    uint16_t first_cluster_number_upper;
+    uint16_t last_modified_time;
+    uint16_t last_modified_date;
+    uint16_t first_cluster_number_lower;
+    uint32_t size;
+} __attribute__((packed)) DIR_FAT_8_3_t;
+
+typedef struct DIR_FAT_LONG_FILENAME {
+    uint8_t index;
+    uint16_t first_utf16_chars[5];
+    uint8_t lf_attribute; // check to verify this a lf entry
+    uint8_t lf_entry_type;
+    uint8_t checksum;
+    uint16_t second_utf16_chars[6];
+    uint16_t zero_reserved;
+    uint16_t final_utf16_chars[2];
+} __attribute__((packed)) DIR_FAT_LONG_FILENAME_t;
+
+/*
  *  Helper Functions
  */
 
-FSType determine_fs_type(BS_FAT* bs);
+void determine_fs_type(BPBComputedValues_t* computed_values, BS_FAT* bs);
 uint32_t get_num_sectors_in_logical_volume(BPB* bpb);
+// can probably do without the explicit bpb ptr here
+uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_cluster);
+uint8_t* get_root_directory_ptr(uint8_t* file_system);
+BPBComputedValues_t compute_values(BS_FAT* bs);
