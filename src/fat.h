@@ -28,12 +28,13 @@ typedef struct BPB {
     uint32_t large_sector_count; // Only set if num_sectors_per_cluster == 0
  } __attribute__((packed)) BPB;
 
-// Correct name to be BS_FAT
+// Correct name to be BS_FAT 
 typedef struct BPBComputedValues {
     uint32_t total_sectors;
     uint32_t num_sectors_per_fat;
     uint32_t num_root_dir_sectors;
     uint32_t first_fat_sector_index;
+    uint32_t first_root_dir_entry_sector_index;
     uint32_t first_data_sector_index;
     uint32_t num_data_sectors;
     uint32_t num_clusters;
@@ -122,7 +123,7 @@ typedef enum DIR_ATTR {
 } DIR_ATTR_t;
 
 typedef struct DIR_FAT_8_3 {
-    char file_name[8];
+    char file_name[11];
     uint8_t attributes;
     uint8_t nt_reserved;
     uint8_t creation_time_tenths_sec;
@@ -147,13 +148,16 @@ typedef struct DIR_FAT_LONG_FILENAME {
     uint16_t final_utf16_chars[2];
 } __attribute__((packed)) DIR_FAT_LONG_FILENAME_t;
 
+#define LF_ATTR 0x0F
+
 /*
  *  Helper Functions
  */
 
+BPBComputedValues_t compute_values(BS_FAT* bs);
 void determine_fs_type(BPBComputedValues_t* computed_values, BS_FAT* bs);
 uint32_t get_num_sectors_in_logical_volume(BPB* bpb);
 // can probably do without the explicit bpb ptr here
 uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_cluster);
 uint8_t* get_root_directory_ptr(uint8_t* file_system);
-BPBComputedValues_t compute_values(BS_FAT* bs);
+DIR_FAT_8_3_t* get_dir_fat_8_3(uint8_t* dir_ent_ptr);

@@ -193,3 +193,20 @@ void print_fs_type(FSType fs_type) {
             break;
     }
 }
+
+void print_dir_fat_8_3(DIR_FAT_8_3_t* dir_ent_ptr) {
+    printf("Filename: %11s\n", dir_ent_ptr->file_name);
+    // Modify this to print attributes that are present
+    printf("Attributes: %02X\n", dir_ent_ptr->attributes);
+    printf("NT Reserved: %02X\n", dir_ent_ptr->nt_reserved);
+    // Modify to parse the date and time
+    printf("Creation time (100ms): %02X\n", dir_ent_ptr->creation_time_tenths_sec);
+    printf("Creation time (s,m,h): %04X\n", dir_ent_ptr->creation_time);
+    printf("Creation date (d,m,y): %04X\n", dir_ent_ptr->creation_date);
+    printf("Last access date (d,m,y): %04X\n", dir_ent_ptr->last_access_date);
+    printf("First cluster number upper: %04X\n", dir_ent_ptr->first_cluster_number_upper);
+    printf("Last modified time (s,m,h): %04X\n", dir_ent_ptr->creation_time);
+    printf("Last modified date (d,m,y): %04X\n", dir_ent_ptr->last_access_date);
+    printf("First cluster number lower: %04X\n", dir_ent_ptr->first_cluster_number_lower);
+    printf("Size: %u\n", dir_ent_ptr->first_cluster_number_lower);
+}

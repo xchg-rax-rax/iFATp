@@ -13,6 +13,7 @@ BPBComputedValues_t compute_values(BS_FAT* bs) {
     computed_values.num_sectors_per_fat = (bs->bpb.num_sectors_per_fat == 0) ? bs->ebr.fat32.num_sectors_per_fat : bs->bpb.num_sectors_per_fat;
     computed_values.num_root_dir_sectors = ((bs->bpb.num_root_directory_entires * 32) + (bs->bpb.num_bytes_per_sector - 1)) / bs->bpb.num_bytes_per_sector;
     computed_values.first_data_sector_index = bs->bpb.num_reserved_sectors + (bs->bpb.num_file_allocation_tables * computed_values.num_sectors_per_fat) + computed_values.num_root_dir_sectors;
+    computed_values.first_root_dir_entry_sector_index = (bs->bpb.num_reserved_sectors + (computed_values.num_sectors_per_fat * bs->bpb.num_file_allocation_tables));
     computed_values.first_fat_sector_index = bs->bpb.num_reserved_sectors;
     computed_values.num_data_sectors = computed_values.total_sectors - (bs->bpb.num_reserved_sectors + (bs->bpb.num_file_allocation_tables * computed_values.num_sectors_per_fat) + computed_values.num_root_dir_sectors);
     computed_values.num_clusters = computed_values.num_data_sectors / bs->bpb.num_sectors_per_cluster;
@@ -75,4 +76,26 @@ uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_
 }
 
 uint8_t* get_root_directory_ptr(uint8_t* file_system) {
+    BS_FAT* bs = (BS_FAT*) file_system;
+    BPBComputedValues_t computed_values = compute_values(bs);
+    return file_system + (computed_values.first_root_dir_entry_sector_index * bs->bpb.num_bytes_per_sector);
+}
+
+DIR_FAT_8_3_t* get_dir_fat_8_3(uint8_t* dir_ent_ptr) {
+    // We don't care about the long file name of the directory (for now)
+    // so we skip over any long file name entries.
+    // We don't want to go on forever so we stop and return null if we
+    // see 20 lf blocks in a row
+    int i = 0;
+    for(; i < 20; i++) {
+        DIR_FAT_LONG_FILENAME_t* lf_dir = (DIR_FAT_LONG_FILENAME_t*) dir_ent_ptr;
+        if (lf_dir->lf_attribute != LF_ATTR) {
+            break;
+        }
+        dir_ent_ptr += sizeof(DIR_FAT_LONG_FILENAME_t);
+    }
+    if (i == 20) {
+        return NULL;
+    }
+    return (DIR_FAT_8_3_t*) dir_ent_ptr;
 }

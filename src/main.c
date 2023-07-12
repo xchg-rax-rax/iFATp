@@ -47,6 +47,14 @@ int main(int argc, char** argv) {
             printf("[*] FAT12 file-system detected.\n");
             print_fat_12_metadata(boot_sector);
             print_computed_values(&computed_values);
+            printf("%s","\nRoot Filesystem Entry\n");
+            printf("%s","---------------------\n\n");
+            DIR_FAT_8_3_t* root_dir_ent = get_dir_fat_8_3(get_root_directory_ptr(file_map));
+            printf("Directory Entry Filesystem Offset: %p\n", (void*)((uint8_t*)root_dir_ent-file_map));
+            print_dir_fat_8_3(get_dir_fat_8_3(&root_dir_ent[0]));
+            print_dir_fat_8_3(get_dir_fat_8_3(&root_dir_ent[1]));
+            print_dir_fat_8_3(get_dir_fat_8_3(&root_dir_ent[3]));
+            print_dir_fat_8_3(get_dir_fat_8_3(&root_dir_ent[5]));
             break;
         case FAT16:
             printf("[*] FAT16 file-system detected.\n");
