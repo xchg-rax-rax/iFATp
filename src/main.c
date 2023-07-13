@@ -49,12 +49,13 @@ int main(int argc, char** argv) {
             print_computed_values(&computed_values);
             printf("%s","\nRoot Filesystem Entry\n");
             printf("%s","---------------------\n\n");
-            DIR_FAT_8_3_t* root_dir_ent = get_dir_fat_8_3(get_root_directory_ptr(file_map));
-            printf("Directory Entry Filesystem Offset: %p\n", (void*)((uint8_t*)root_dir_ent-file_map));
-            print_dir_fat_8_3(get_dir_fat_8_3(&root_dir_ent[0]));
-            print_dir_fat_8_3(get_dir_fat_8_3(&root_dir_ent[1]));
-            print_dir_fat_8_3(get_dir_fat_8_3(&root_dir_ent[3]));
-            print_dir_fat_8_3(get_dir_fat_8_3(&root_dir_ent[5]));
+            size_t root_dir_ent_count;
+            DIR_FAT_8_3_t** root_dir_entries = parse_root_directory(file_map, &root_dir_ent_count);
+            printf("Root Directory Entry Count: %lu\n", root_dir_ent_count);
+            for (int i = 0; i < root_dir_ent_count; i++) {
+                print_dir_fat_8_3(root_dir_entries[i]);
+            }
+            free(root_dir_entries);
             break;
         case FAT16:
             printf("[*] FAT16 file-system detected.\n");

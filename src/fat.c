@@ -1,7 +1,9 @@
 #include "fat.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "util.h"
 
 BPBComputedValues_t compute_values(BS_FAT* bs) {
     BPBComputedValues_t computed_values;
@@ -64,7 +66,7 @@ uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_
     uint8_t* target_fat = file_system + (bpb->num_bytes_per_sector * fat_sector);
 
     // no size checking on the fs, probably should do this somewhere... [SEC]
-    // also sus pointer arithmetic
+    // also such pointer arithmetic
     uint16_t table_value = *(uint16_t*)&target_fat[entry_offset];
 
     if (active_cluster & 0x0001) {
@@ -75,17 +77,17 @@ uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_
     }
 }
 
-uint8_t* get_root_directory_ptr(uint8_t* file_system) {
+DIR_FAT_8_3_t* get_root_directory_ptr(uint8_t* file_system) {
     BS_FAT* bs = (BS_FAT*) file_system;
     BPBComputedValues_t computed_values = compute_values(bs);
-    return file_system + (computed_values.first_root_dir_entry_sector_index * bs->bpb.num_bytes_per_sector);
+    return (DIR_FAT_8_3_t*) (file_system + (computed_values.first_root_dir_entry_sector_index * bs->bpb.num_bytes_per_sector));
 }
 
 DIR_FAT_8_3_t* get_dir_fat_8_3(uint8_t* dir_ent_ptr) {
     // We don't care about the long file name of the directory (for now)
     // so we skip over any long file name entries.
     // We don't want to go on forever so we stop and return null if we
-    // see 20 lf blocks in a row
+    // see 20 if blocks in a row
     int i = 0;
     for(; i < 20; i++) {
         DIR_FAT_LONG_FILENAME_t* lf_dir = (DIR_FAT_LONG_FILENAME_t*) dir_ent_ptr;
@@ -98,4 +100,47 @@ DIR_FAT_8_3_t* get_dir_fat_8_3(uint8_t* dir_ent_ptr) {
         return NULL;
     }
     return (DIR_FAT_8_3_t*) dir_ent_ptr;
+}
+
+DIR_FAT_8_3_t** parse_root_directory(uint8_t* file_system, size_t* root_dir_ent_count) {
+    DIR_FAT_8_3_t* root_dir_start = get_root_directory_ptr(file_system);
+    DIR_FAT_8_3_t* root_dir_ent = root_dir_start; 
+    *root_dir_ent_count = 0;
+    while(((uint8_t*)root_dir_ent)[0] != 0x00) {
+        if (root_dir_ent->attributes != 0x0F && 
+            ((uint8_t*)root_dir_ent)[0] != 0xE5) {
+            (*root_dir_ent_count)++;
+        }
+        root_dir_ent++;
+    }
+    if (*root_dir_ent_count == 0)  {
+        return NULL;
+    }
+    DIR_FAT_8_3_t** entries = (DIR_FAT_8_3_t**) calloc(*root_dir_ent_count, sizeof(DIR_FAT_8_3_t*));
+
+    if (entries == NULL) {
+        printf("%s\n","[!] Failed to allocate array for root directory entries"); 
+        return NULL;
+    }
+
+    root_dir_ent = root_dir_start; 
+    int i = 0;
+    while(((uint8_t*)root_dir_ent)[0] != 0x00) {
+        if (root_dir_ent->attributes != 0x0F && 
+            ((uint8_t*)root_dir_ent)[0] != 0xE5) {
+            entries[i] = root_dir_ent;
+            i++;
+        }
+        root_dir_ent++;
+    }
+    return entries;
+}
+
+/*
+ *  Parses a directory at a given cluster, returns and array of pointers
+ *  to the directory entries in that directory
+ */
+DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint32_t cluster_number) {
+    BS_FAT* bs = (BS_FAT*) file_system;
+    
 }

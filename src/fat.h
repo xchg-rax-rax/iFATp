@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 typedef enum FSType : int32_t {
     FAT12 = 0,
@@ -112,15 +113,13 @@ typedef struct BS_exFAT {
 /*
  *  Directory Structs
  */
-//perhaps these should just be consts?
-typedef enum DIR_ATTR {
-    READ_ONLY=0x01,
-    HIDDEN=0x02,
-    SYSTEM=0x04,
-    VOLUME_ID=0x08,
-    DIRECTORY=0x10,
-    ARCHIVE=0x20
-} DIR_ATTR_t;
+#define READ_ONLY 0x01,
+#define HIDDEN 0x02,
+#define SYSTEM 0x04,
+#define VOLUME_ID 0x08,
+#define DIRECTORY 0x10,
+#define ARCHIVE 0x20
+#define LONG_FILE 0x0F
 
 typedef struct DIR_FAT_8_3 {
     char file_name[11];
@@ -159,5 +158,6 @@ void determine_fs_type(BPBComputedValues_t* computed_values, BS_FAT* bs);
 uint32_t get_num_sectors_in_logical_volume(BPB* bpb);
 // can probably do without the explicit bpb ptr here
 uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_cluster);
-uint8_t* get_root_directory_ptr(uint8_t* file_system);
+DIR_FAT_8_3_t* get_root_directory_ptr(uint8_t* file_system);
 DIR_FAT_8_3_t* get_dir_fat_8_3(uint8_t* dir_ent_ptr);
+DIR_FAT_8_3_t** parse_root_directory(uint8_t* file_system, size_t* root_dir_ent_count);
