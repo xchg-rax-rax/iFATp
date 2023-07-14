@@ -53,7 +53,15 @@ int main(int argc, char** argv) {
             DIR_FAT_8_3_t** root_dir_entries = parse_root_directory(file_map, &root_dir_ent_count);
             printf("Root Directory Entry Count: %lu\n", root_dir_ent_count);
             for (int i = 0; i < root_dir_ent_count; i++) {
-                print_dir_fat_8_3(root_dir_entries[i]);
+                print_dir_fat_8_3_pretty(root_dir_entries[i]);
+                if ((root_dir_entries[i])->attributes & DIRECTORY) {
+                    uint32_t dir_ent_count = 0;
+                    DIR_FAT_8_3_t** dir_entries = parse_directory(file_map, root_dir_entries[i]->first_cluster_number_lower, &dir_ent_count);
+                    printf("Directory Entries: %d\n", dir_ent_count);
+                    for (int j = 0; j < dir_ent_count; j++) {
+                        print_dir_fat_8_3_pretty(dir_entries[j]);
+                    }
+                }
             }
             free(root_dir_entries);
             break;

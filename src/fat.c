@@ -56,7 +56,7 @@ uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_
         return active_cluster;
     }
 
-    // FAT12 file table entries are 12 bytes so we need to do some 
+    // FAT file table entries are 12 bytes so we need to do some 
     // arithmetic contortion to get this to work...
     uint16_t fat_offset = active_cluster + (active_cluster / 2);
     // doubt next line
@@ -91,7 +91,7 @@ DIR_FAT_8_3_t* get_dir_fat_8_3(uint8_t* dir_ent_ptr) {
     int i = 0;
     for(; i < 20; i++) {
         DIR_FAT_LONG_FILENAME_t* lf_dir = (DIR_FAT_LONG_FILENAME_t*) dir_ent_ptr;
-        if (lf_dir->lf_attribute != LF_ATTR) {
+        if (lf_dir->lf_attribute != LONG_FILE) {
             break;
         }
         dir_ent_ptr += sizeof(DIR_FAT_LONG_FILENAME_t);
@@ -136,11 +136,80 @@ DIR_FAT_8_3_t** parse_root_directory(uint8_t* file_system, size_t* root_dir_ent_
     return entries;
 }
 
+uint32_t compute_sector_index_from_cluster_index(uint8_t* file_system, uint32_t cluster_index) {
+    BS_FAT* bs = (BS_FAT*)file_system;
+    BPBComputedValues_t computed_values = compute_values((BS_FAT*)file_system);
+    return ((cluster_index - 2)  * bs->bpb.num_sectors_per_cluster) + computed_values.first_data_sector_index;
+}
+
 /*
  *  Parses a directory at a given cluster, returns and array of pointers
  *  to the directory entries in that directory
  */
-DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint32_t cluster_number) {
+DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint16_t first_cluster_number, uint32_t* dir_ent_count) {
     BS_FAT* bs = (BS_FAT*) file_system;
-    
+    uint64_t num_bytes_per_cluster = (bs->bpb.num_bytes_per_sector * bs->bpb.num_sectors_per_cluster);
+    uint16_t cluster_number = first_cluster_number;
+    // count number of entries
+    *(dir_ent_count) = 0;
+    // We just truncate a directory atm if a bad sector is detected
+    while(cluster_number  < 0xFF7 && cluster_number != 0x000) {
+        uint32_t first_sector_index = compute_sector_index_from_cluster_index(file_system, cluster_number);
+        DIR_FAT_8_3_t* current_dir_ent = (DIR_FAT_8_3_t*) (file_system + (first_sector_index * 512));
+        while(((uint8_t*)current_dir_ent)[0] != 0x00) {
+            if (current_dir_ent->attributes != 0x0F && 
+                ((uint8_t*)current_dir_ent)[0] != 0xE5) {
+                (*dir_ent_count)++;
+            }
+            uint64_t next_byte_offset = (uint64_t)((uint8_t*)(current_dir_ent+1)-file_system) % num_bytes_per_cluster;
+            if (next_byte_offset == 0) {
+                break;
+            }
+            else {
+                current_dir_ent++;
+            }
+        }
+        cluster_number = get_next_cluster_fat12(&(bs->bpb), file_system, cluster_number);
+    }
+    cluster_number = first_cluster_number;
+    DIR_FAT_8_3_t** entries = (DIR_FAT_8_3_t**) calloc(*dir_ent_count, sizeof(DIR_FAT_8_3_t*));
+    // count number of entries
+    // We just truncate a directory atm if a bad sector is detected
+    int i = 0;
+    while(cluster_number  < 0xFF7 && cluster_number != 0x000) {
+        uint32_t first_sector_index = compute_sector_index_from_cluster_index(file_system, cluster_number);
+        DIR_FAT_8_3_t* current_dir_ent = (DIR_FAT_8_3_t*) (file_system + (first_sector_index * 512));
+        while(((uint8_t*)current_dir_ent)[0] != 0x00) {
+            if (current_dir_ent->attributes != 0x0F && 
+                ((uint8_t*)current_dir_ent)[0] != 0xE5) {
+                entries[i] = current_dir_ent;
+                i++;
+            }
+            uint64_t next_byte_offset = (uint64_t)((uint8_t*)(current_dir_ent+1)-file_system) % num_bytes_per_cluster;
+            if (next_byte_offset == 0) {
+                break;
+            }
+            else {
+                current_dir_ent++;
+            }
+        }
+        cluster_number = get_next_cluster_fat12(&(bs->bpb), file_system, cluster_number);
+    }
+    return entries;
+}
+
+DIR_FAT_8_3_TIME_t parse_fat_8_3_time(uint16_t raw_time) {
+    DIR_FAT_8_3_TIME_t time; 
+    time.second = (raw_time & 0b11111);
+    time.minute = ((raw_time >> 5) & 0b111111);
+    time.hour = ((raw_time >> 11) & 0b11111);
+    return time;
+}
+
+DIR_FAT_8_3_DATE_t parse_fat_8_3_date(uint16_t raw_date) {
+    DIR_FAT_8_3_DATE_t date; 
+    date.day = (raw_date & 0b11111);
+    date.month = ((raw_date >> 5) & 0b1111);
+    date.year = ((raw_date >> 9) & 0b1111111) + 1980; // Time starts in 1980...
+    return date;
 }

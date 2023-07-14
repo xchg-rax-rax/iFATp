@@ -179,7 +179,7 @@ void print_fs_type(FSType fs_type) {
             printf("%s","FAT16\n");
             break;
         case FAT32:
-            printf("%s","FAT32\n");
+            printf("%s","FAT\n");
             break;
         case exFAT:
             printf("%s","exFAT\n");
@@ -209,4 +209,54 @@ void print_dir_fat_8_3(DIR_FAT_8_3_t* dir_ent_ptr) {
     printf("Last modified date (d,m,y): %04X\n", dir_ent_ptr->last_access_date);
     printf("First cluster number lower: %04X\n", dir_ent_ptr->first_cluster_number_lower);
     printf("Size: %u\n", dir_ent_ptr->first_cluster_number_lower);
+}
+
+void print_dir_fat_8_3_pretty(DIR_FAT_8_3_t* dir_ent_ptr) {
+    printf("Filename: %11s\n", dir_ent_ptr->file_name);
+    // Modify this to print attributes that are present
+    printf("%s", "Attributes: ");
+    print_dir_fat_8_3_attrs(dir_ent_ptr->attributes);
+    // Modify to parse the date and time
+    printf("\n%s","Created: ");
+    print_dir_fat_8_3_time(parse_fat_8_3_time(dir_ent_ptr->creation_time));
+    putchar(' ');
+    print_dir_fat_8_3_date(parse_fat_8_3_date(dir_ent_ptr->creation_date));
+    printf("\n%s","Last Accessed: ");
+    print_dir_fat_8_3_date(parse_fat_8_3_date(dir_ent_ptr->last_access_date));
+    printf("\n%s","Last Modified time: ");
+    print_dir_fat_8_3_time(parse_fat_8_3_time(dir_ent_ptr->last_modified_time));
+    putchar(' ');
+    print_dir_fat_8_3_date(parse_fat_8_3_date(dir_ent_ptr->last_modified_date));
+    printf("\nSize: %u\n", dir_ent_ptr->first_cluster_number_lower);
+}
+
+void print_dir_fat_8_3_time(DIR_FAT_8_3_TIME_t time) {
+    printf("%02u:%02u:%02u", time.hour, time.minute, time.second);
+}
+
+void print_dir_fat_8_3_date(DIR_FAT_8_3_DATE_t date) {
+    // I'm not a yank, live with it
+    printf("%02u/%02u/%u", date.day, date.month, date.year);
+}
+
+void print_dir_fat_8_3_attrs(uint8_t attrs) {
+    if (attrs == LONG_FILE) {
+        printf("%s", "LONG_FILE");
+        return;
+    }
+    if (attrs & HIDDEN) {
+        printf("%s", "HIDDEN ");
+    }
+    if (attrs & SYSTEM) {
+        printf("%s", "SYSTEM ");
+    }
+    if (attrs & VOLUME_ID) {
+        printf("%s", "VOLUME_ID ");
+    }
+    if (attrs & DIRECTORY) {
+        printf("%s", "DIRECTORY ");
+    }
+    if (attrs & ARCHIVE) {
+        printf("%s", "ARCHIVE ");
+    }
 }

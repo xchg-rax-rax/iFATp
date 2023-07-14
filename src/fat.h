@@ -113,12 +113,14 @@ typedef struct BS_exFAT {
 /*
  *  Directory Structs
  */
-#define READ_ONLY 0x01,
-#define HIDDEN 0x02,
-#define SYSTEM 0x04,
-#define VOLUME_ID 0x08,
-#define DIRECTORY 0x10,
+// Directory Entry Attributes
+#define READ_ONLY 0x01
+#define HIDDEN 0x02
+#define SYSTEM 0x04
+#define VOLUME_ID 0x08
+#define DIRECTORY 0x10
 #define ARCHIVE 0x20
+// Long file Attribute
 #define LONG_FILE 0x0F
 
 typedef struct DIR_FAT_8_3 {
@@ -147,7 +149,17 @@ typedef struct DIR_FAT_LONG_FILENAME {
     uint16_t final_utf16_chars[2];
 } __attribute__((packed)) DIR_FAT_LONG_FILENAME_t;
 
-#define LF_ATTR 0x0F
+typedef struct DIR_FAT_8_3_TIME {
+    uint8_t second;
+    uint8_t minute;
+    uint8_t hour;
+} DIR_FAT_8_3_TIME_t;
+
+typedef struct DIR_FAT_8_3_DATE {
+    uint8_t day;
+    uint8_t month;
+    uint16_t year;
+} DIR_FAT_8_3_DATE_t;
 
 /*
  *  Helper Functions
@@ -161,3 +173,7 @@ uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_
 DIR_FAT_8_3_t* get_root_directory_ptr(uint8_t* file_system);
 DIR_FAT_8_3_t* get_dir_fat_8_3(uint8_t* dir_ent_ptr);
 DIR_FAT_8_3_t** parse_root_directory(uint8_t* file_system, size_t* root_dir_ent_count);
+DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint16_t first_cluster_number, uint32_t* dir_ent_count);
+DIR_FAT_8_3_TIME_t parse_fat_8_3_time(uint16_t raw_time);
+DIR_FAT_8_3_DATE_t parse_fat_8_3_date(uint16_t raw_date);
+uint32_t compute_sector_index_from_cluster_index(uint8_t* file_system, uint32_t cluster_index);
