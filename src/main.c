@@ -47,23 +47,35 @@ int main(int argc, char** argv) {
             printf("[*] FAT12 file-system detected.\n");
             print_fat_12_metadata(boot_sector);
             print_computed_values(&computed_values);
+            size_t dir_ent_count = 0;
+            char path[] = "/TEST_DIR/C";
+            DIR_FAT_8_3_t** dir_entries = list_directory_contents(file_map, &dir_ent_count, path);
+            for (int i = 0; i < dir_ent_count; i++) {
+                print_dir_fat_8_3_short(dir_entries[i]);
+            }
+            free(dir_entries);
+            
+            /*
             printf("%s","\nRoot Filesystem Entry\n");
             printf("%s","---------------------\n\n");
             size_t root_dir_ent_count;
             DIR_FAT_8_3_t** root_dir_entries = parse_root_directory(file_map, &root_dir_ent_count);
-            printf("Root Directory Entry Count: %lu\n", root_dir_ent_count);
+            printf("Root Directory Entry Count: %lu\n\n", root_dir_ent_count);
             for (int i = 0; i < root_dir_ent_count; i++) {
-                print_dir_fat_8_3_pretty(root_dir_entries[i]);
+                print_dir_fat_8_3_short(root_dir_entries[i]);
                 if ((root_dir_entries[i])->attributes & DIRECTORY) {
                     uint32_t dir_ent_count = 0;
                     DIR_FAT_8_3_t** dir_entries = parse_directory(file_map, root_dir_entries[i]->first_cluster_number_lower, &dir_ent_count);
-                    printf("Directory Entries: %d\n", dir_ent_count);
+                    printf("\n\tDirectory Entries: %d\n\n", dir_ent_count);
                     for (int j = 0; j < dir_ent_count; j++) {
-                        print_dir_fat_8_3_pretty(dir_entries[j]);
+                        putchar('\t');
+                        print_dir_fat_8_3_short(dir_entries[j]);
                     }
+                    putchar('\n');
                 }
             }
             free(root_dir_entries);
+            */
             break;
         case FAT16:
             printf("[*] FAT16 file-system detected.\n");

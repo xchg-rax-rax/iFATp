@@ -208,7 +208,7 @@ void print_dir_fat_8_3(DIR_FAT_8_3_t* dir_ent_ptr) {
     printf("Last modified time (s,m,h): %04X\n", dir_ent_ptr->creation_time);
     printf("Last modified date (d,m,y): %04X\n", dir_ent_ptr->last_access_date);
     printf("First cluster number lower: %04X\n", dir_ent_ptr->first_cluster_number_lower);
-    printf("Size: %u\n", dir_ent_ptr->first_cluster_number_lower);
+    printf("Size: %u bytes\n", dir_ent_ptr->size);
 }
 
 void print_dir_fat_8_3_pretty(DIR_FAT_8_3_t* dir_ent_ptr) {
@@ -227,7 +227,20 @@ void print_dir_fat_8_3_pretty(DIR_FAT_8_3_t* dir_ent_ptr) {
     print_dir_fat_8_3_time(parse_fat_8_3_time(dir_ent_ptr->last_modified_time));
     putchar(' ');
     print_dir_fat_8_3_date(parse_fat_8_3_date(dir_ent_ptr->last_modified_date));
-    printf("\nSize: %u\n", dir_ent_ptr->first_cluster_number_lower);
+    printf("\nSize: %u bytes\n", dir_ent_ptr->size);
+}
+
+void print_dir_fat_8_3_short(DIR_FAT_8_3_t* dir_ent_ptr) {
+    printf("%11s\t", dir_ent_ptr->file_name);
+    // Modify this to print attributes that are present
+    print_dir_fat_8_3_attrs(dir_ent_ptr->attributes);
+    // Modify to parse the date and time
+    putchar('\t');
+    print_dir_fat_8_3_time(parse_fat_8_3_time(dir_ent_ptr->last_modified_time));
+    putchar(' ');
+    print_dir_fat_8_3_date(parse_fat_8_3_date(dir_ent_ptr->last_modified_date));
+    putchar('\t');
+    printf("%u bytes\n", dir_ent_ptr->size);
 }
 
 void print_dir_fat_8_3_time(DIR_FAT_8_3_TIME_t time) {

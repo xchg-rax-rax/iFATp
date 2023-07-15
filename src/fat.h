@@ -173,7 +173,8 @@ uint16_t get_next_cluster_fat12(BPB* bpb, uint8_t* file_system, uint16_t active_
 DIR_FAT_8_3_t* get_root_directory_ptr(uint8_t* file_system);
 DIR_FAT_8_3_t* get_dir_fat_8_3(uint8_t* dir_ent_ptr);
 DIR_FAT_8_3_t** parse_root_directory(uint8_t* file_system, size_t* root_dir_ent_count);
-DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint16_t first_cluster_number, uint32_t* dir_ent_count);
+DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint16_t first_cluster_number, size_t* dir_ent_count);
 DIR_FAT_8_3_TIME_t parse_fat_8_3_time(uint16_t raw_time);
 DIR_FAT_8_3_DATE_t parse_fat_8_3_date(uint16_t raw_date);
 uint32_t compute_sector_index_from_cluster_index(uint8_t* file_system, uint32_t cluster_index);
+DIR_FAT_8_3_t** list_directory_contents(uint8_t* file_system, size_t* directory_size, uint8_t* path);

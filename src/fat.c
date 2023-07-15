@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "util.h"
 
@@ -141,12 +142,12 @@ uint32_t compute_sector_index_from_cluster_index(uint8_t* file_system, uint32_t 
     BPBComputedValues_t computed_values = compute_values((BS_FAT*)file_system);
     return ((cluster_index - 2)  * bs->bpb.num_sectors_per_cluster) + computed_values.first_data_sector_index;
 }
-
+// split the following function into 2, one to measure size, one to get contend
 /*
  *  Parses a directory at a given cluster, returns and array of pointers
  *  to the directory entries in that directory
  */
-DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint16_t first_cluster_number, uint32_t* dir_ent_count) {
+DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint16_t first_cluster_number, size_t* dir_ent_count) {
     BS_FAT* bs = (BS_FAT*) file_system;
     uint64_t num_bytes_per_cluster = (bs->bpb.num_bytes_per_sector * bs->bpb.num_sectors_per_cluster);
     uint16_t cluster_number = first_cluster_number;
@@ -174,7 +175,7 @@ DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint16_t first_cluster_num
     cluster_number = first_cluster_number;
     DIR_FAT_8_3_t** entries = (DIR_FAT_8_3_t**) calloc(*dir_ent_count, sizeof(DIR_FAT_8_3_t*));
     // count number of entries
-    // We just truncate a directory atm if a bad sector is detected
+    // We just truncate a directory ATM if a bad sector is detected
     int i = 0;
     while(cluster_number  < 0xFF7 && cluster_number != 0x000) {
         uint32_t first_sector_index = compute_sector_index_from_cluster_index(file_system, cluster_number);
@@ -197,6 +198,33 @@ DIR_FAT_8_3_t** parse_directory(uint8_t* file_system, uint16_t first_cluster_num
     }
     return entries;
 }
+
+// Note this function mutates path
+DIR_FAT_8_3_t** list_directory_contents(uint8_t* file_system, size_t* directory_size, uint8_t* path) {
+    *directory_size = 0;
+    DIR_FAT_8_3_t** dir_entries = parse_root_directory(file_system, directory_size);
+
+    char delimiters[] = "/";
+    char* token = strtok(path, delimiters);
+    while (token != NULL) {
+        size_t token_len = strnlen(token, 11);
+        int found = 0;
+        size_t current_dir_size = *directory_size;
+        for(int i = 0; i < current_dir_size ; i++) {
+            if (strncmp(token, dir_entries[i]->file_name, token_len) == 0) {
+                dir_entries = parse_directory(file_system, dir_entries[i]->first_cluster_number_lower, directory_size);
+                found = 1;
+                break;
+            }
+        }
+        if (found == 0) {
+            return NULL;
+        }
+        token = strtok(NULL, delimiters);
+    }
+    return dir_entries;
+}
+
 
 DIR_FAT_8_3_TIME_t parse_fat_8_3_time(uint16_t raw_time) {
     DIR_FAT_8_3_TIME_t time; 
