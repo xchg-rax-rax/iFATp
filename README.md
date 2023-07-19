@@ -17,7 +17,7 @@ iFATp was created as a tool during the process of OS dev and as a consequence it
 [At present the goal is to implment the following for FAT12/16 only]
 - Add computed statistics for file systems [Computed values useful for locating FS structures are done, aspects related to capacity etc still WIP]
 - Add File system parsing:
-    - List Files and directories [Back end to list file details and directory contents complete, still need to implment UI for listing specific dirs etc] 
+    - Add ability to cat files
     - List Deleted Files
     - Recover Deleted Files
     - Get size and capacity information
